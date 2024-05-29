@@ -2,12 +2,12 @@
 
 // CONSTANTS
 const RECIPE_URLS = [
-    'https://adarsh249.github.io/Lab8-Starter/recipes/1_50-thanksgiving-side-dishes.json',
-    'https://adarsh249.github.io/Lab8-Starter/recipes/2_roasting-turkey-breast-with-stuffing.json',
-    'https://adarsh249.github.io/Lab8-Starter/recipes/3_moms-cornbread-stuffing.json',
-    'https://adarsh249.github.io/Lab8-Starter/recipes/4_50-indulgent-thanksgiving-side-dishes-for-any-holiday-gathering.json',
-    'https://adarsh249.github.io/Lab8-Starter/recipes/5_healthy-thanksgiving-recipe-crockpot-turkey-breast.json',
-    'https://adarsh249.github.io/Lab8-Starter/recipes/6_one-pot-thanksgiving-dinner.json',
+  'https://adarsh249.github.io/Lab8-Starter/recipes/1_50-thanksgiving-side-dishes.json',
+  'https://adarsh249.github.io/Lab8-Starter/recipes/2_roasting-turkey-breast-with-stuffing.json',
+  'https://adarsh249.github.io/Lab8-Starter/recipes/3_moms-cornbread-stuffing.json',
+  'https://adarsh249.github.io/Lab8-Starter/recipes/4_50-indulgent-thanksgiving-side-dishes-for-any-holiday-gathering.json',
+  'https://adarsh249.github.io/Lab8-Starter/recipes/5_healthy-thanksgiving-recipe-crockpot-turkey-breast.json',
+  'https://adarsh249.github.io/Lab8-Starter/recipes/6_one-pot-thanksgiving-dinner.json',
 ];
 
 // Run the init() function when the page has loaded
@@ -54,6 +54,21 @@ function initializeServiceWorker() {
   // B5. TODO - In the event that the service worker registration fails, console
   //            log that it has failed.
   // STEPS B6 ONWARDS WILL BE IN /sw.js
+
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then((regi) => {
+          console.log('ServiceWorker regi successful', regi);
+        })
+        .catch((error) => {
+          console.error('ServiceWorker regi failed', error);
+        });
+
+    });
+  }
+
 }
 
 /**
@@ -100,8 +115,27 @@ async function getRecipes() {
   //            resolve() method.
   // A10. TODO - Log any errors from catch using console.error
   // A11. TODO - Pass any errors to the Promise's reject() function
+  const recipes = localStorage.getItem('recipes');
+  if (recipes)
+    return JSON.parse(recipes);
+  let frecipes = [];
+  return new Promise(async (resolve, reject) => {
+    for (const recipe_url of RECIPE_URLS) {
+      try {
+        const response = await fetch(recipe_url);
+        const recipe_json = await response.json();
+        frecipes.push(recipe_json);
+        if (frecipes.length === RECIPE_URLS.length) {
+          saveRecipesToStorage(frecipes);
+          resolve(frecipes);
+        }
+      } catch (error) {
+        console.error(error);
+        reject(error);
+      }
+    }
+  });
 }
-
 /**
  * Takes in an array of recipes, converts it to a string, and then
  * saves that string to 'recipes' in localStorage
